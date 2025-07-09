@@ -5,7 +5,7 @@ import {ChordToken} from "./sheet-parsing/tokens";
 
 type ChordBoxParams = Parameters<ChordBox["draw"]>[0];
 
-function dbChordToVexChord(input: ChordDef, positionIndex = 0): ChordBoxParams {
+export function dbChordToVexChord(input: ChordDef, positionIndex = 0): ChordBoxParams {
 	const position = input.positions[positionIndex];
 	const fingers = [...position.fingers].reverse();
 	const frets = [...position.frets].reverse();
@@ -34,7 +34,7 @@ function dbChordToVexChord(input: ChordDef, positionIndex = 0): ChordBoxParams {
 	};
 }
 
-function userDefinedToVexChord({frets, position}: UserDefinedChord, numStrings: number): ChordBoxParams{
+export function userDefinedToVexChord({frets, position}: UserDefinedChord, numStrings: number): ChordBoxParams{
 	const barres: ChordBoxParams["barres"] = [];
 
 	const barrePositions = frets
