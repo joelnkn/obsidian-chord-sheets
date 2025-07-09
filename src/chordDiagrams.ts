@@ -29,6 +29,7 @@ function dbChordToVexChord(input: ChordDef, positionIndex = 0): ChordBoxParams {
 		chord,
 		position: position.baseFret,
 		barres,
+		// abuse tuning labels for fingering
 		tuning: [...fingers].reverse().map(finger => finger > 0 ? `${finger}` : '')
 	};
 }
@@ -65,7 +66,8 @@ function userDefinedToVexChord({frets, position}: UserDefinedChord, numStrings: 
 	return {
 		// @ts-ignore
 		chord: chordFrets,
-		position, barres
+		position, barres,
+		tuning: []
 
 	};
 }
