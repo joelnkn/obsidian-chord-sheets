@@ -272,6 +272,52 @@ describe('Parsing / Tokenization', () => {
 				chordSymbol: { value: "C°", range: [0, 2] },
 			});
 		});
+
+		test('should handle user-defined chords with space-separated multi-digit frets', () => {
+			const line = 'Db[8 10 x 12 12 12] test';
+			const { tokens } = tokenizeLine(line, lineIndex, chordLineMarker, textLineMarker);
+
+			const chordTokens = tokens.filter(t => isChordToken(t)) as ChordToken[];
+			expect(chordTokens).toHaveLength(1);
+			expect(chordTokens[0]).toMatchObject<ChordTokenWithPartialChord>({
+				range: [0, 19],
+				chord: {
+					userDefinedChord: {
+						frets: "8 10 x 12 12 12",
+						position: 0
+					}
+				},
+				chordSymbol: { value: "Db", range: [0, 2] },
+				userDefinedChord: {
+					openingBracket: { value: '[', range: [2, 3] },
+					frets: { value: '8 10 x 12 12 12', range: [3, 18] },
+					closingBracket: { value: ']', range: [18, 19] }
+				}
+			});
+		});
+
+		test('should handle user-defined chords with comma-separated multi-digit frets', () => {
+			const line = 'Bb[9,8,8,8,9,8] test';
+			const { tokens } = tokenizeLine(line, lineIndex, chordLineMarker, textLineMarker);
+
+			const chordTokens = tokens.filter(t => isChordToken(t)) as ChordToken[];
+			expect(chordTokens).toHaveLength(1);
+			expect(chordTokens[0]).toMatchObject<ChordTokenWithPartialChord>({
+				range: [0, 15],
+				chord: {
+					userDefinedChord: {
+						frets: "9,8,8,8,9,8",
+						position: 0
+					}
+				},
+				chordSymbol: { value: "Bb", range: [0, 2] },
+				userDefinedChord: {
+					openingBracket: { value: '[', range: [2, 3] },
+					frets: { value: '9,8,8,8,9,8', range: [3, 14] },
+					closingBracket: { value: ']', range: [14, 15] }
+				}
+			});
+		});
 	});
 
 	describe('headers', () => {

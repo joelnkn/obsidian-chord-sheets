@@ -13,6 +13,19 @@ function testDbChord(instrument: keyof typeof ChordsDB, key: string, suffix: str
 	expect(result).toEqual(expectedResult);
 }
 
+function testUserChord(frets: string, position: number, numStrings: number, expectedResult: Omit<ReturnType<typeof userDefinedToVexChord>, 'tuning'>) {
+	const result = userDefinedToVexChord({frets, position}, numStrings);
+	
+	// tuning array is always empty strings so chord box height won't extend down
+	expect(result.tuning).toEqual(new Array(numStrings).fill(''));
+	
+	// check all other properties
+	expect(result).toMatchObject({
+		...expectedResult,
+		tuning: new Array(numStrings).fill('')
+	});
+}
+
 describe("Conversion of chords to vexchord format", () => {
 	describe("dbChordToVexChord", () => {
 		describe("open chords", () => {
@@ -193,10 +206,7 @@ describe("Conversion of chords to vexchord format", () => {
 
 	describe("userDefinedToVexChord", () => {
 		test("basic fret pattern", () => {
-			const userChord = {frets: "320013", position: 1};
-			const result = userDefinedToVexChord(userChord, 6);
-
-			expect(result).toEqual({
+			testUserChord("320013", 1, 6, {
 				chord: [
 					[6, 3],
 					[5, 2],
@@ -207,15 +217,12 @@ describe("Conversion of chords to vexchord format", () => {
 				],
 				position: 1,
 				barres: [],
-				tuning: []
+				numFrets: 4
 			});
 		});
 
 		test("single barre pattern", () => {
-			const userChord = {frets: "_335533_", position: 1};
-			const result = userDefinedToVexChord(userChord, 6);
-
-			expect(result).toEqual({
+			testUserChord("_335533_", 1, 6, {
 				chord: [
 					[6, 3],
 					[5, 3],
@@ -232,15 +239,12 @@ describe("Conversion of chords to vexchord format", () => {
 						fret: 3
 					}
 				],
-				tuning: []
+				numFrets: 5
 			});
 		});
 
 		test("muted strings with x", () => {
-			const userChord = {frets: "x32010", position: 1};
-			const result = userDefinedToVexChord(userChord, 6);
-
-			expect(result).toEqual({
+			testUserChord("x32010", 1, 6, {
 				chord: [
 					[6, "x"],
 					[5, 3],
@@ -251,15 +255,12 @@ describe("Conversion of chords to vexchord format", () => {
 				],
 				position: 1,
 				barres: [],
-				tuning: []
+				numFrets: 4
 			});
 		});
 
 		test("double barre pattern", () => {
-			const userChord = {frets: "_3333__55_", position: 1};
-			const result = userDefinedToVexChord(userChord, 6);
-
-			expect(result).toEqual({
+			testUserChord("_3333__55_", 1, 6, {
 				chord: [
 					[6, 3],
 					[5, 3],
@@ -281,7 +282,71 @@ describe("Conversion of chords to vexchord format", () => {
 						fret: 5
 					}
 				],
-				tuning: []
+				numFrets: 5
+			});
+		});
+
+		test("multi-digit frets with spaces", () => {
+			testUserChord("12 14 14 13 12 12", 0, 6, {
+				chord: [
+					[6, 1],
+					[5, 3],
+					[4, 3],
+					[3, 2],
+					[2, 1],
+					[1, 1]
+				],
+				position: 12,
+				barres: [],
+				numFrets: 4
+			});
+		});
+
+		test("multi-digit frets with commas and muted strings", () => {
+			testUserChord("x,10,12,12,11,x", 0, 6, {
+				chord: [
+					[6, "x"],
+					[5, 1],
+					[4, 3],
+					[3, 3],
+					[2, 2],
+					[1, "x"]
+				],
+				position: 10,
+				barres: [],
+				numFrets: 4
+			});
+		});
+
+		test("open strings with multi-digit notation", () => {
+			testUserChord("0 12 13 12 0 0", 0, 6, {
+				chord: [
+					[6, 0],
+					[5, 1],
+					[4, 2],
+					[3, 1],
+					[2, 0],
+					[1, 0]
+				],
+				position: 12,
+				barres: [],
+				numFrets: 4
+			});
+		});
+
+		test("explicit position with relative frets", () => {
+			testUserChord("x2x132", 4, 6, {
+				chord: [
+					[6, "x"],
+					[5, 2],
+					[4, "x"],
+					[3, 1],
+					[2, 3],
+					[1, 2]
+				],
+				position: 4,
+				barres: [],
+				numFrets: 4
 			});
 		});
 	});

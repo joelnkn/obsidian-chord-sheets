@@ -35,7 +35,7 @@ rendered locally, no API calls to an external service are required.
 ### 🔨 Custom Chord Shapes
 
 Define your own chord shapes using brackets: `Bbadd13[x13333]`, `Dm6[4|x2x132]` (with capo), or `C°[x34_242_]`
-(with barre).
+(with barre). For frets higher up the neck, separate with spaces or commas: `C*[0 10 10 12 8 8]`, `C*[0,10,10,12,8,8]`.
 
 ### 🎸 Choose Your Instrument
 

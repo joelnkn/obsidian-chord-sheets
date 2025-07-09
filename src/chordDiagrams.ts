@@ -34,11 +34,17 @@ export function dbChordToVexChord(input: ChordDef, positionIndex = 0): ChordBoxP
 	};
 }
 
-export function userDefinedToVexChord({frets, position}: UserDefinedChord, numStrings: number): ChordBoxParams{
+export function userDefinedToVexChord({frets, position}: UserDefinedChord, numStrings: number, defaultNumFrets: number = 4): ChordBoxParams & { numFrets: number } {
+	const splitFrets = /[\s,]/.test(frets) ? frets.match(/\d+|x|_/g) : frets.split('');
+
+	if (!splitFrets) {
+		throw new Error("Could not parse fret string: " + frets);
+	}
+
+
 	const barres: ChordBoxParams["barres"] = [];
 
-	const barrePositions = frets
-		.split('')
+	const barrePositions = splitFrets
 		.map((fret, index) => (fret === '_' ? index : -1))
 		.filter(index => index !== -1);
 
@@ -57,18 +63,58 @@ export function userDefinedToVexChord({frets, position}: UserDefinedChord, numSt
 		});
 	}
 
-	const chordFrets = Array
-		.from(frets.replace(/_/g, ''))
+
+	// map frets to chord array, skip barre markers
+	let chordFrets = splitFrets
+		.filter(fretSymbol => fretSymbol !== "_")
 		.map(
 			(fret, index) => [numStrings - index, fret === "x" ? "x" : parseInt(fret)]
 		);
 
+
+	// determine optimal fret position
+	let finalPosition = position;
+	if (position === 0) {
+		const originalFrets = chordFrets
+			.map(fretDef => fretDef[1])
+			.filter(fret => typeof fret === 'number' && !isNaN(fret)) as number[];
+		
+		const nonOpenFrets = originalFrets.filter(fret => fret > 0);
+		if (nonOpenFrets.length > 0) {
+			const minFret = Math.min(...nonOpenFrets);
+			const maxFret = Math.max(...nonOpenFrets);
+			const fretSpan = maxFret - minFret + 1;
+			
+			// if chord spans more than available frets, or starts above fret 3 (treat low frets with muted strings like open chords)
+			if (fretSpan > defaultNumFrets || minFret > 3) {
+				// position at minFret to show the most compact view
+				finalPosition = minFret;
+				chordFrets = chordFrets.map(fretDef =>
+					typeof fretDef[1] === 'number' && fretDef[1] > 0 ? [fretDef[0], fretDef[1] - finalPosition + 1] : fretDef
+				);
+			}
+			// else: position remains 0
+		}
+	}
+
+
+	const finalFrets = chordFrets
+		.map(fretDef => fretDef[1])
+		.filter(fret => typeof fret === 'number' && !isNaN(fret)) as number[];
+
+
+	const numFrets = finalFrets.length > 0
+		? Math.max(defaultNumFrets, Math.max(...finalFrets))
+		: defaultNumFrets;
+
 	return {
 		// @ts-ignore
 		chord: chordFrets,
-		position, barres,
-		tuning: []
-
+		position: finalPosition,
+		barres,
+		numFrets,
+		// empty string labels so spacing is equal to non-custom chords with string labels
+		tuning: new Array(numStrings).fill('')
 	};
 }
 
@@ -99,7 +145,7 @@ export function renderChordDiagram({containerEl, userDefinedChord, chordDef, num
 	box.appendChild(chordDiagram);
 
 	const vexChord = userDefinedChord
-		? userDefinedToVexChord(userDefinedChord, numStrings)
+		? userDefinedToVexChord(userDefinedChord, numStrings, numFrets)
 		: dbChordToVexChord(chordDef, position);
 
 	const chordBox = new ChordBox(chordDiagram, {
@@ -151,19 +197,16 @@ export function makeChordDiagram(instrument: Instrument, chordToken: ChordToken,
 
 	if (chordToken.chord.userDefinedChord !== undefined) {
 
-		const highestFret = Array.from(chordToken.chord.userDefinedChord.frets)
-			.map(f => parseInt(f))
-			.filter(f => !isNaN(f))
-			.sort((a, b) => b - a)[0];
+		const vexChord = userDefinedToVexChord(chordToken.chord.userDefinedChord, numStrings, numFrets);
 
 		renderChordDiagram({
 			containerEl: containerEl,
 			userDefinedChord: chordToken.chord.userDefinedChord,
 			chordDef: {key: "", suffix: "", positions: []},
 			numPositions: 1,
-			position: 0,
+			position: vexChord.position ?? 1,
 			numStrings: numStrings,
-			numFrets: Math.max(numFrets, highestFret),
+			numFrets: vexChord.numFrets,
 			chordName: chordToken.chordSymbol.value,
 			width: width
 		});
