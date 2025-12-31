@@ -138,7 +138,7 @@ export function renderChordDiagram({containerEl, userDefinedChord, chordDef, num
 
 	const chordNameEl = document.createElement("div");
 	chordNameEl.classList.add("chord-sheet-chord-name", "chord-sheet-chord-highlight");
-	chordNameEl.innerText = chordName;
+	chordNameEl.innerText = chordName.split(".")[0];
 	box.appendChild(chordNameEl);
 
 	const chordDiagram = document.createElement("div");
