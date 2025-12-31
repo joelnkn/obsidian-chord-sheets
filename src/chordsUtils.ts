@@ -16,6 +16,7 @@ export interface SheetChord {
 	type: string,
 	typeAliases: string[],
 	bass: string | null,
+	position: string | undefined,
 	userDefinedChord?: UserDefinedChord
 }
 

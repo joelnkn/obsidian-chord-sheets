@@ -78,13 +78,13 @@ export function userDefinedToVexChord({frets, position}: UserDefinedChord, numSt
 		const originalFrets = chordFrets
 			.map(fretDef => fretDef[1])
 			.filter(fret => typeof fret === 'number' && !isNaN(fret)) as number[];
-		
+
 		const nonOpenFrets = originalFrets.filter(fret => fret > 0);
 		if (nonOpenFrets.length > 0) {
 			const minFret = Math.min(...nonOpenFrets);
 			const maxFret = Math.max(...nonOpenFrets);
 			const fretSpan = maxFret - minFret + 1;
-			
+
 			// if chord spans more than available frets, or starts above fret 3 (treat low frets with muted strings like open chords)
 			if (fretSpan > defaultNumFrets || minFret > 3) {
 				// position at minFret to show the most compact view
@@ -138,7 +138,7 @@ export function renderChordDiagram({containerEl, userDefinedChord, chordDef, num
 
 	const chordNameEl = document.createElement("div");
 	chordNameEl.classList.add("chord-sheet-chord-name", "chord-sheet-chord-highlight");
-	chordNameEl.innerText = chordName.split(".")[0];
+	chordNameEl.innerText = chordName.split(".")[0].split("@")[0];
 	box.appendChild(chordNameEl);
 
 	const chordDiagram = document.createElement("div");
@@ -217,8 +217,14 @@ export function makeChordDiagram(instrument: Instrument, chordToken: ChordToken,
 			return;
 		}
 
+		const suppliedPosition = chordToken.chord.position ? Number.parseInt(chordToken.chord.position) : undefined;
 		let currentPosition = position;
-		const numPositions = dbChord.positions.length;
+		let numPositions = dbChord.positions.length;
+		if (Number.isInteger(suppliedPosition)) {
+			currentPosition = suppliedPosition! - 1;
+			numPositions = 0;
+		}
+		
 		if (numPositions > 0) {
 			const positionChooser = Object.assign(document.createElement('div'), {
 				className: "chord-sheet-position-chooser"
@@ -291,7 +297,7 @@ export function makeChordDiagram(instrument: Instrument, chordToken: ChordToken,
 			userDefinedChord: undefined,
 			chordDef: dbChord,
 			numPositions: numPositions,
-			position: position,
+			position: currentPosition,
 			numStrings: numStrings,
 			numFrets: numFrets,
 			chordName: chordToken.chordSymbol.value,

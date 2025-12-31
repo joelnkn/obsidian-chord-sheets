@@ -10,9 +10,10 @@ function offsetRange(range: [number, number], offset: number): [number, number] 
 }
 
 function getChord(maybeChordSymbol: string): SheetChord {
-	const tonalJsChord = Chord.get(maybeChordSymbol);
+	const [chordSymbol, position] = maybeChordSymbol.split("@", 2);
+	const tonalJsChord = Chord.get(chordSymbol);
 	const {tonic, type, aliases: typeAliases} = tonalJsChord;
-	return {tonic: tonic ?? "", type, typeAliases, bass: tonalJsChord.bass || null};
+	return {tonic: tonic ?? "", type, typeAliases, bass: tonalJsChord.bass || null, position: position};
 }
 
 export function tokenizeLine(line: string, lineIndex: number, chordLineMarker: string, textLineMarker: string): TokenizedLine {
